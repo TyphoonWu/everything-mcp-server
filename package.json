@@ -1,0 +1,51 @@
+{
+  "name": "everything-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Everything file search utility integration",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "everything-mcp-server": "build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc && node build/index.js",
+    "clean": "rimraf build",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "everything",
+    "file-search",
+    "windows",
+    "search",
+    "model-context-protocol"
+  ],
+  "author": "John Hickey",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peterparker57/everything-mcp-server.git"
+  },
+  "homepage": "https://github.com/peterparker57/everything-mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/peterparker57/everything-mcp-server/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "win32"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "koffi": "^2.8.14",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  }
+}
