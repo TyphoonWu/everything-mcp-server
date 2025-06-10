@@ -91,10 +91,10 @@ async function searchWithEverything(query: string, options: {
     Everything_SetRegex(options.regex || false);
     Everything_SetMax(options.maxResults || 100);
     Everything_SetOffset(0);
-    
+
     // Set request flags to get file name, path, and size
     Everything_SetRequestFlags(EVERYTHING_REQUEST_FILE_NAME | EVERYTHING_REQUEST_PATH | EVERYTHING_REQUEST_FULL_PATH_AND_FILE_NAME);
-    
+
     // Set sort order
     let sortOrder = EVERYTHING_SORT_NAME_ASCENDING;
     switch (options.sortBy) {
@@ -124,11 +124,11 @@ async function searchWithEverything(query: string, options: {
 
     // Execute the query
     const success = Everything_QueryW(true);
-    
+
     if (!success) {
       const errorCode = Everything_GetLastError();
       let errorMessage = `Everything query failed with error code: ${errorCode}`;
-      
+
       switch (errorCode) {
         case EVERYTHING_ERROR_MEMORY:
           errorMessage = "Out of memory";
@@ -158,52 +158,100 @@ async function searchWithEverything(query: string, options: {
           errorMessage = "Bad parameter";
           break;
       }
-      
+
       return { results: [], totalResults: 0, error: errorMessage };
     }
 
     // Get results
     const numResults = Everything_GetNumResults();
     const results: string[] = [];
-    
+
     for (let i = 0; i < numResults; i++) {
       const fileName = Everything_GetResultFileNameW(i);
       const path = Everything_GetResultPathW(i);
       const isFile = Everything_IsFileResult(i);
       const isFolder = Everything_IsFolderResult(i);
-      
+
       let fullPath = '';
       if (path && fileName) {
         fullPath = path.endsWith('\\') ? `${path}${fileName}` : `${path}\\${fileName}`;
       } else if (fileName) {
         fullPath = fileName;
       }
-      
+
       const type = isFile ? '[FILE]' : isFolder ? '[FOLDER]' : '[UNKNOWN]';
       results.push(`${type} ${fullPath}`);
     }
 
     return { results, totalResults: numResults };
   } catch (error) {
-    return { 
-      results: [], 
-      totalResults: 0, 
-      error: `Everything search failed: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      results: [],
+      totalResults: 0,
+      error: `Everything search failed: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }
 
-// Add a tool for basic file search
+server.prompt(
+  "search_files",
+  { query: z.string() },
+  ({ query }) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `user want to search local files, his query:\n${query}\nplease transfer the query into json format:
+        {
+            "method": "tools/call",
+            "params": {
+                "name": "search_files",  # 工具名
+                "arguments": {
+                    "query": "README.md",  # 搜索的文件名, the file name need to be searched
+                    "maxResults": 5        # 返回的最大结果数, return max files the tool searched.
+                },
+                "_meta": {"progressToken": 0},
+            },
+            "jsonrpc": "2.0",
+            "id": 2,
+        }`
+      }
+    }]
+  })
+);
+
+/**
+ * Add a tool for basic file search
+ * search_files 工具提示词模板:
+ * 
+ * {
+ *   "method": "tools/call",
+ *   "params": {
+ *     "name": "search_files",
+ *     "arguments": {
+ *       "query": "README.md",
+ *       // 可选参数:
+ *       "maxResults": 20,
+ *       "matchCase": false,
+ *       "matchWholeWord": false,
+ *       "regex": false
+ *     },
+ *     "_meta": { "progressToken": 0 }
+ *   },
+ *   "jsonrpc": "2.0",
+ *   "id": 1
+ * }
+ */
 server.tool(
   "search_files",
   {
     query: z.string().describe("Search query for file names"),
-    maxResults: z.number().min(1).max(1000).optional().describe("Maximum number of results to return (default: 100)"),
+    maxResults: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 20)"),
     matchCase: z.boolean().optional().describe("Enable case-sensitive search"),
     matchWholeWord: z.boolean().optional().describe("Match whole words only"),
     regex: z.boolean().optional().describe("Enable regular expression search"),
   },
-  async ({ query, maxResults = 100, matchCase = false, matchWholeWord = false, regex = false }) => {
+  async ({ query, maxResults = 20, matchCase = false, matchWholeWord = false, regex = false }) => {
     try {
       const { results, totalResults, error } = await searchWithEverything(query, {
         maxResults,
@@ -228,7 +276,7 @@ server.tool(
         content: [
           {
             type: "text",
-            text: results.length > 0 
+            text: results.length > 0
               ? `Found ${totalResults} files (showing ${results.length}):\n\n${results.join('\n')}`
               : `No files found matching "${query}"`,
           },
@@ -263,34 +311,34 @@ server.tool(
     regex: z.boolean().optional().describe("Enable regular expression search"),
     sortBy: z.enum(['name_asc', 'name_desc', 'path_asc', 'path_desc', 'size_asc', 'size_desc', 'date_asc', 'date_desc']).optional().describe("Sort results by field"),
   },
-  async ({ 
-    query, 
-    path, 
-    extension, 
-    size, 
-    dateModified, 
-    maxResults = 100, 
-    matchCase = false, 
-    matchWholeWord = false, 
+  async ({
+    query,
+    path,
+    extension,
+    size,
+    dateModified,
+    maxResults = 100,
+    matchCase = false,
+    matchWholeWord = false,
     regex = false,
     sortBy = 'name_asc'
   }) => {
     try {
       // Build the Everything search query with filters
       let searchQuery = query;
-      
+
       if (path) {
         searchQuery = `path:"${path}" ${searchQuery}`;
       }
-      
+
       if (extension) {
         searchQuery = `ext:${extension} ${searchQuery}`;
       }
-      
+
       if (size) {
         searchQuery = `size:${size} ${searchQuery}`;
       }
-      
+
       if (dateModified) {
         searchQuery = `dm:${dateModified} ${searchQuery}`;
       }
@@ -316,18 +364,18 @@ server.tool(
       }
 
       let responseText = `Found ${totalResults} files`;
-      
+
       // Add filter information to response
       const filters: string[] = [];
       if (path) filters.push(`path: "${path}"`);
       if (extension) filters.push(`extension: ${extension}`);
       if (size) filters.push(`size: ${size}`);
       if (dateModified) filters.push(`date modified: ${dateModified}`);
-      
+
       if (filters.length > 0) {
         responseText += ` (filtered by ${filters.join(', ')})`;
       }
-      
+
       responseText += ` (showing ${results.length}, sorted by ${sortBy}):\n\n${results.length > 0 ? results.join('\n') : `No files found matching "${query}"`}`;
 
       return {
@@ -363,7 +411,7 @@ server.tool(
   async ({ filename, path, maxResults = 50 }) => {
     try {
       let searchQuery = filename;
-      
+
       if (path) {
         searchQuery = `path:"${path}" ${searchQuery}`;
       }
@@ -385,11 +433,11 @@ server.tool(
         };
       }
 
-      const responseText = totalResults > 1 
+      const responseText = totalResults > 1
         ? `Found ${totalResults} instances of "${filename}" (showing ${results.length}):\n\n${results.join('\n')}`
         : totalResults === 1
-        ? `Found only 1 instance of "${filename}":\n\n${results[0]}`
-        : `No files found with name "${filename}"`;
+          ? `Found only 1 instance of "${filename}":\n\n${results[0]}`
+          : `No files found with name "${filename}"`;
 
       return {
         content: [
@@ -413,7 +461,27 @@ server.tool(
   }
 );
 
-// Add a tool for searching by file content (using Everything's content search syntax)
+/**
+ * Add a tool for searching by file content (using Everything's content search syntax)
+ * search_content 工具提示词模板:
+ * 
+ * {
+ *   "method": "tools/call",
+ *   "params": {
+ *     "name": "search_content",
+ *     "arguments": {
+ *       "content": "要查找的文本内容",
+ *       // 可选参数:
+ *       "fileTypes": "txt;doc;pdf", // 限定文件类型（分号分隔）
+ *       "path": "C:\\Users\\wostest\\Documents", // 限定搜索路径
+ *       "maxResults": 10 // 返回最大结果数
+ *     },
+ *     "_meta": { "progressToken": 0 }
+ *   },
+ *   "jsonrpc": "2.0",
+ *   "id": 1
+ * }
+ */
 server.tool(
   "search_content",
   {
@@ -425,12 +493,12 @@ server.tool(
   async ({ content, fileTypes, path, maxResults = 50 }) => {
     try {
       let searchQuery = `content:"${content}"`;
-      
+
       if (fileTypes) {
         const types = fileTypes.split(';').map(type => `ext:${type.trim()}`).join(' | ');
         searchQuery = `(${types}) ${searchQuery}`;
       }
-      
+
       if (path) {
         searchQuery = `path:"${path}" ${searchQuery}`;
       }
@@ -451,7 +519,7 @@ server.tool(
         };
       }
 
-      const responseText = results.length > 0 
+      const responseText = results.length > 0
         ? `Found ${totalResults} files containing "${content}" (showing ${results.length}):\n\n${results.join('\n')}`
         : `No files found containing "${content}". Note: Content search requires Everything to have content indexing enabled.`;
 

@@ -87,6 +87,11 @@ npm install
 npm run build
 ```
 
+4. Debug project:
+```bash
+npx @modelcontextprotocol/inspector node build/index.js
+```
+
 ## Configuration
 
 Add the server to your MCP settings file:
