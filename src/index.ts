@@ -244,6 +244,7 @@ server.prompt(
  */
 server.tool(
   "search_files",
+  "Find and locate files or folders by name, such as searching for README.md file location on your computer.",
   {
     query: z.string().describe("Search query for file names"),
     maxResults: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 20)"),
@@ -299,6 +300,7 @@ server.tool(
 // Add a tool for advanced file search with filters
 server.tool(
   "search_files_advanced",
+  "Advanced file search with filters such as path, extension, size, date modified, and sorting.",
   {
     query: z.string().describe("Search query for file names"),
     path: z.string().optional().describe("Limit search to specific path"),
@@ -403,6 +405,7 @@ server.tool(
 // Add a tool for finding duplicate files
 server.tool(
   "find_duplicates",
+  "Find duplicate files by filename, optionally limited to a specific path.",
   {
     filename: z.string().describe("Filename to search for duplicates"),
     path: z.string().optional().describe("Limit search to specific path"),
@@ -484,6 +487,7 @@ server.tool(
  */
 server.tool(
   "search_content",
+  "Search for files containing specific text content, with optional file type and path filters.",
   {
     content: z.string().describe("Text content to search for within files"),
     fileTypes: z.string().optional().describe("Limit to specific file types (e.g., 'txt;doc;pdf')"),
