@@ -231,7 +231,7 @@ server.prompt(
  *     "arguments": {
  *       "query": "README.md",
  *       // 可选参数:
- *       "maxResults": 20,
+ *       "maxResults": 100,
  *       "matchCase": false,
  *       "matchWholeWord": false,
  *       "regex": false
@@ -247,12 +247,12 @@ server.tool(
   "Find and locate files or folders by name, such as searching for README.md file location on your computer.",
   {
     query: z.string().describe("Search query for file names"),
-    maxResults: z.number().min(1).max(20).optional().describe("Maximum number of results to return (default: 20)"),
+    maxResults: z.number().min(1).max(1000).optional().describe("Maximum number of results to return (default: 100)"),
     matchCase: z.boolean().optional().describe("Enable case-sensitive search"),
     matchWholeWord: z.boolean().optional().describe("Match whole words only"),
     regex: z.boolean().optional().describe("Enable regular expression search"),
   },
-  async ({ query, maxResults = 20, matchCase = false, matchWholeWord = false, regex = false }) => {
+  async ({ query, maxResults = 100, matchCase = false, matchWholeWord = false, regex = false }) => {
     try {
       const { results, totalResults, error } = await searchWithEverything(query, {
         maxResults,
