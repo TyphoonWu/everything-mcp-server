@@ -7,6 +7,7 @@ import koffi from 'koffi';
 import * as path from 'path';
 import * as os from 'os';
 import { fileURLToPath } from 'url';
+import process from "process";
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -45,7 +46,11 @@ const EVERYTHING_REQUEST_SIZE = 0x00000010;
 const EVERYTHING_REQUEST_DATE_MODIFIED = 0x00000040;
 
 // Load the Everything DLL
-const dllPath = path.join(__dirname, '..', 'EverythingSDK', 'dll', os.arch() === 'x64' ? 'Everything64.dll' : 'Everything32.dll');
+const everything_home = process.env.EVERYTHING_SDK_PATH;
+if (!everything_home) {
+  throw new Error('Environment variable EVERYTHING_SDK_PATH is not set.');
+}
+const dllPath = path.join(everything_home, 'dll', os.arch() === 'x64' ? 'Everything64.dll' : 'Everything32.dll');
 
 let everythingLib: any;
 try {

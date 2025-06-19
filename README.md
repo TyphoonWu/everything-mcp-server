@@ -89,7 +89,7 @@ npm run build
 
 4. Debug project:
 ```bash
-npx @modelcontextprotocol/inspector node build/index.js
+npx @modelcontextprotocol/inspector -e EVERYTHING_SDK_PATH="C:\\Program Files\\Everything\\Everything-SDK" node build/index.js
 ```
 
 ## Configuration
@@ -100,15 +100,22 @@ Add the server to your MCP settings file:
 {
   "mcpServers": {
     "everything": {
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["path/to/everything-mcp-server/build/index.js"],
+      "name": "file Search",
       "disabled": false,
-      "env": {},
-      "alwaysAllow": [
+      "timeout": 60,
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "path/to/everything-mcp-server/build/index.js"
+      ],
+      "env": {
+        "EVERYTHING_SDK_PATH": "C:\\Program Files\\Everything\\Everything-SDK"
+      },
+      "autoApprove": [
         "search_files",
+        "search_content",
         "search_files_advanced",
-        "find_duplicates",
-        "search_content"
+        "find_duplicates"
       ]
     }
   }
