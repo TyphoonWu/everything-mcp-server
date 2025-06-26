@@ -47,6 +47,7 @@ const EVERYTHING_REQUEST_DATE_MODIFIED = 0x00000040;
 
 // Load the Everything DLL
 const everything_home = process.env.EVERYTHING_SDK_PATH;
+console.error('EVERYTHING_SDK_PATH from env:', process.env.EVERYTHING_SDK_PATH);
 if (!everything_home) {
   throw new Error('Environment variable EVERYTHING_SDK_PATH is not set.');
 }
